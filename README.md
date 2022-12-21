@@ -1,4 +1,4 @@
-# Procedureal-Dungeon-Generation
+# Procedural-Dungeon-Generation
 Procedural 2D Dungeon Generation in Unity.
 
 
