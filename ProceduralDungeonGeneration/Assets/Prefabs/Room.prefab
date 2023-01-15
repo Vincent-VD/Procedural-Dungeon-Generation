@@ -96,4 +96,4 @@ MonoBehaviour:
   _grid: {fileID: 7456032665586490922}
   _roomWidth: 3
   _roomHeight: 4
-  _cellSize: 1
+  _cellSize: 0.2
