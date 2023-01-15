@@ -29,17 +29,26 @@ public class GenerateDungeon : MonoBehaviour
 		    int width = NormalizedRandom(_minDimensions, _maxDimensions);
 		    int height = NormalizedRandom(_minDimensions, _maxDimensions);
 		    room.GetComponent<GenerateRoom>().InitializeRoom(width, height);
-			Debug.Log(width.ToString() + "  " + height.ToString());
-			room.transform.position = pos;
-			room.transform.SetParent(this.transform);
+		    Debug.Log(width.ToString() + "  " + height.ToString());
+		    room.transform.position = pos;
+		    room.transform.SetParent(this.transform);
 	    }
-	}
 
+	    //Physics2D.simulationMode = SimulationMode2D.Script;
+		//float time = 2.0f;
+		//while (time > 0.0f)
+		//{
+		//	time -= Time.fixedDeltaTime;
+		//	Physics2D.Simulate(Time.fixedDeltaTime);
+		//}
+    }
+
+    private float timer;
     // Update is called once per frame
     void Update()
     {
-        
-    }
+		
+	}
 
     int NormalizedRandom(int minVal, int maxVal)
     {
