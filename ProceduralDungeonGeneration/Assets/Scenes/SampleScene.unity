@@ -178,6 +178,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8766523307946960262, guid: 7c1e2e496439fd944b64eccfec6f621f, type: 3}
+      propertyPath: orthographic size
+      value: 45
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7c1e2e496439fd944b64eccfec6f621f, type: 3}
 --- !u!1 &1887062535
@@ -210,9 +214,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _roomTemplate: {fileID: 6799106178145891546, guid: a1643ad22bf0f5d4ca82a7c57e236389, type: 3}
-  _nrOfRooms: 10
-  _minDimensions: 3
-  _maxDimensions: 8
+  _nrOfRooms: 40
+  _minDimensions: 10
+  _maxDimensions: 57
+  _ellipseHeight: 0.382
+  _mainRoomSelectionThreshold: 1
 --- !u!4 &1887062537
 Transform:
   m_ObjectHideFlags: 0

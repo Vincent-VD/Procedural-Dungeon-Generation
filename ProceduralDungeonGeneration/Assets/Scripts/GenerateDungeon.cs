@@ -1,76 +1,157 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using Unity.Mathematics;
+using UnityEditor.SearchService;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 public class GenerateDungeon : MonoBehaviour
 {
 	[SerializeField] private GameObject _roomTemplate;
-	[SerializeField] private int _nrOfRooms = 2;
-	[SerializeField] private int _minDimensions = 3;
-	[SerializeField] private int _maxDimensions = 8;
+	[SerializeField] [MinAttribute(0)] private int _nrOfRooms = 2;
+	[SerializeField] [MinAttribute(0)] private int _minDimensions = 3;
+	[SerializeField] [MinAttribute (0)] private int _maxDimensions = 8;
+	[SerializeField] [Range (0,1)] private float _ellipseHeight = 1.0f;
+	[SerializeField] private float _mainRoomSelectionThreshold = 1.0f;
 
-	struct Room
-	{
-		public Vector3 _pos;
-		public int _width;
-		public int _height;
-		public GameObject _room;
-	}
+	private GameObject[] _rooms;
+	private List<GameObject> _mainRooms = new List<GameObject>();
+	private float _meanWidth = 0.0f;
+	private float _meanHeight = 0.0f;
+	private List<Vector2> _mainRoomCenters = new List<Vector2>();
+	private List<Vector2> _hullVerts = new List<Vector2>();
+	private List<Triangle> _triangles = new List<Triangle>();
+	private List<Connection> _connections = new List<Connection>();
 
 	// Start is called before the first frame update
-    void Start()
-    {
-	    for (int iter = 0; iter < _nrOfRooms; ++iter)
-	    {
-		    Vector3 pos = Random.insideUnitCircle;
-		    GameObject room = Instantiate(_roomTemplate);
-		    int width = NormalizedRandom(_minDimensions, _maxDimensions);
-		    int height = NormalizedRandom(_minDimensions, _maxDimensions);
-		    room.GetComponent<GenerateRoom>().InitializeRoom(width, height);
-		    Debug.Log(width.ToString() + "  " + height.ToString());
-		    room.transform.position = pos;
-		    room.transform.SetParent(this.transform);
-	    }
+	void Start()
+	{
+		_rooms = new GameObject[_nrOfRooms];
+		for (int iter = 0; iter < _nrOfRooms; ++iter)
+		{
+			Vector3 pos = Random.insideUnitCircle;
+			pos.y *= _ellipseHeight;
+			GameObject room = Instantiate(_roomTemplate);
+			int width = NormalizedRandom(_minDimensions, _maxDimensions);
+			int height = NormalizedRandom(_minDimensions, _maxDimensions);
+			room.GetComponent<GenerateRoom>().InitializeRoom(width, height);
+			//Debug.Log(width.ToString() + "  " + height.ToString());
+			room.transform.position = pos;
+			room.transform.SetParent(this.transform);
+			_rooms[iter] = room;
+			_meanWidth += (float) width;
+			_meanHeight += (float) height;
+		}
 
-	    //Physics2D.simulationMode = SimulationMode2D.Script;
-		//float time = 2.0f;
-		//while (time > 0.0f)
+		foreach (var room in _rooms)
+		{
+			room.GetComponent<GenerateRoom>().Simulate();
+		}
+
+		_meanWidth /= _nrOfRooms;
+		_meanHeight /= _nrOfRooms;
+
+		//Select main rooms
+		foreach (var room in _rooms)
+		{
+			GenerateRoom roomGnr = room.GetComponent<GenerateRoom>();
+			if (roomGnr.Width >= _mainRoomSelectionThreshold * _meanWidth &&
+				roomGnr.Height >= _mainRoomSelectionThreshold * _meanHeight)
+			{
+				_mainRooms.Add(room);
+				roomGnr.SetMainRoom();
+			}
+		}
+
+		foreach (var room in _mainRooms)
+		{
+			GenerateRoom roomGnr = room.GetComponent<GenerateRoom>();
+			_mainRoomCenters.Add((Vector2)room.transform.position + roomGnr.Offset);
+		}
+
+		//_hullVerts = DelaunayTriangulation.GetConvexHull(_mainRoomCenters);
+		//_triangles = DelaunayTriangulation.TriangulateConvexPolygon(_hullVerts);
+
+		//for (int iter = 0; iter < _mainRoomCenters.Count; ++iter)
 		//{
-		//	time -= Time.fixedDeltaTime;
-		//	Physics2D.Simulate(Time.fixedDeltaTime);
-		//}
-    }
+		//	Vector2 currPoint = _mainRoomCenters[iter];
 
-    private float timer;
-    // Update is called once per frame
-    void Update()
-    {
-		
+		//	for (int inner = 0; inner < +_triangles.Count; ++inner)
+		//	{
+		//		Triangle triangle = _triangles[inner];
+
+		//		if (DelaunayTriangulation.IsPointInTriangle(currPoint, triangle))
+		//		{
+		//			Vector3 p1 = triangle.v1.position;
+		//			Vector3 p2 = triangle.v2.position;
+		//			Vector3 p3 = triangle.v3.position;
+
+		//			Triangle t1 = new Triangle(p1, p2, currPoint);
+		//			Triangle t2 = new Triangle(p1, p3, currPoint);
+		//			Triangle t3 = new Triangle(p2, p3, currPoint);
+
+		//			_triangles.Remove(triangle);
+
+		//			_triangles.Add(t1);
+		//			_triangles.Add(t2);
+		//			_triangles.Add(t3);
+		//			break;
+		//		}
+		//	}
+		//}
+
+		_triangles = DelaunayTriangulation.TriangulateByFlippingEdges(_mainRoomCenters);
+
+		//_connections = DelaunayTriangulation.GenerateMST(_triangles, hullVerts);
+
 	}
 
-    int NormalizedRandom(int minVal, int maxVal)
-    {
-	    float mean = (minVal + maxVal) / 2.0f;
-	    float stdDev = (maxVal - mean) / 3.0f;
-	    return (int)NextGaussianDouble(mean, stdDev);
-    }
+	// Update is called once per frame
+	void Update()
+	{
+		foreach (var triangle in _triangles)
+		{
+			Vector3 p1 = triangle.v1.position;
+			Vector3 p2 = triangle.v2.position;
+			Vector3 p3 = triangle.v3.position;
+
+			Debug.DrawLine(p1, p2, Color.red);
+			Debug.DrawLine(p1, p3, Color.red);
+			Debug.DrawLine(p2, p3, Color.red);
+		}
+
+		//foreach (var curr in _connections)
+		//{
+		//	Debug.DrawLine(curr.p1.position, curr.p2.position, Color.red);
+		//}
+	}
+
+	int NormalizedRandom(int minVal, int maxVal)
+	{
+		float mean = (minVal + maxVal) / 2.0f;
+		float stdDev = (maxVal - mean) / 3.0f;
+		return (int)NextGaussianDouble(mean, stdDev);
+	}
 
 	//Marsaglia polar method
 	public static float NextGaussianDouble(float mean, float stdDev)
-    {
-	    float u, v, S;
+	{
+		float u, v, S;
 
-	    do
-	    {
-		    u = 2.0f * Random.value - 1.0f;
-		    v = 2.0f * Random.value - 1.0f;
-		    S = u * u + v * v;
-	    }
-	    while (S >= 1.0);
+		do
+		{
+			u = 2.0f * Random.value - 1.0f;
+			v = 2.0f * Random.value - 1.0f;
+			S = u * u + v * v;
+		}
+		while (S >= 1.0);
 
-	    float fac = (float)Math.Sqrt(-2.0 * Math.Log(S) / S);
+		float fac = (float)Math.Sqrt(-2.0 * Math.Log(S) / S);
 		return mean + stdDev * u * fac;
-    }
+	}
 }
