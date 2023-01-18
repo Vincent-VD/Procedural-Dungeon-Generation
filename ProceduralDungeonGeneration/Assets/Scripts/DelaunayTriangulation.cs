@@ -5,8 +5,10 @@ using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Xml;
 using TreeEditor;
 using UnityEngine;
+using static UnityEditor.Progress;
 using Random = UnityEngine.Random;
 
 public class Vertex
@@ -162,16 +164,58 @@ public class Plane
 
 public class Connection
 {
-	public Vertex p1;
+	public Vector2 p1;
 
-	public Vertex p2;
+	public Vector2 p2;
 
-	public Connection(Vertex from, Vertex to)
+	public Connection(Vector2 from, Vector2 to)
 	{
 		p1 = from;
 		p2 = to;
 	}
+
+	public bool Equals(Connection other)
+	{
+		if ((p1.Equals(other.p1) || (p1.Equals(other.p2))) && (p2.Equals(other.p2)) || p2.Equals(other.p1))
+		{
+			return true;
+		}
+
+		return false;
+	}
 }
+
+//https://en.wikipedia.org/wiki/Cycle_(graph_theory)
+// Declares the class for the vertices of the graph
+public class Node
+{
+	public Vector2 pos;
+	public GameObject room;
+	public HashSet<Node> adjacentNodes = new HashSet<Node>(); // Set of neighbour vertices
+
+	public bool Equals(Node other)
+	{
+		if (pos.Equals(other.pos))
+		{
+			return true;
+		}
+		return false;
+	}
+}
+
+// Declares the class for the undirected graph
+public class UndirectedGraph
+{
+	public HashSet<Node> nodes = new HashSet<Node>();
+
+	// This method connects node1 and node2 with each other
+	public void ConnectNodes(Node node1, Node node2)
+	{
+		node1.adjacentNodes.Add(node2);
+		node2.adjacentNodes.Add(node1);
+	}
+}
+
 
 //https://www.habrador.com/tutorials/math/11-delaunay/
 public static class DelaunayTriangulation
@@ -648,33 +692,173 @@ public static class DelaunayTriangulation
 	{
 		List<Connection> mst = new List<Connection>();
 
-		foreach (Triangle triangle in triangles)
+		Triangle t = triangles[0];
+		Connection conn1 = new Connection(t.v1.position, t.v2.position);
+		Connection conn2 = new Connection(t.v1.position, t.v3.position);
+		Connection conn3 = new Connection(t.v2.position, t.v3.position);
+		mst.Add(conn1);
+		mst.Add(conn2);
+		mst.Add(conn3);
+
+		//Create connections
+		for (int iter = 1; iter < triangles.Count; iter++)
 		{
-			Connection c1 = new Connection(triangle.v1, triangle.v2);
-			Connection c2 = new Connection(triangle.v1, triangle.v3);
-			Connection c3 = new Connection(triangle.v2, triangle.v3);
-			int val = Random.Range(0, 3);
-			Debug.Log(val);
-			switch (val)
+			Triangle triangle = triangles[iter];
+			Connection c1 = new Connection(triangle.v1.position, triangle.v2.position);
+			Connection c2 = new Connection(triangle.v1.position, triangle.v3.position);
+			Connection c3 = new Connection(triangle.v2.position, triangle.v3.position);
+
+			bool[] markForAdd = {true, true, true };
+
+			for (int inner = 0; inner < mst.Count; inner++)
 			{
-				case 0:
+				Connection connection = mst[inner];
+				if (connection.Equals(c1))
 				{
-					mst.Add(c1);
-					break;
-				};
-				case 1:
-				{
-					mst.Add(c2);
-					break;
+					markForAdd[0] = false;
 				}
-				case 2:
+				if (connection.Equals(c2))
 				{
-					mst.Add(c3);
-					break;
+					markForAdd[1] = false;
+				}
+				if (connection.Equals(c3))
+				{
+					markForAdd[2] = false;
+				}
+			}
+
+			if (markForAdd[0])
+			{
+				mst.Add(c1);
+			}
+
+			if (markForAdd[1])
+			{
+				mst.Add(c2);
+			}
+
+			if (markForAdd[2])
+			{
+				mst.Add(c3);
+			}
+		}
+		UndirectedGraph fullGraph = new UndirectedGraph();
+		UndirectedGraph res = new UndirectedGraph();
+		UndirectedGraph part = new UndirectedGraph();
+		foreach (var vert in vertices)
+		{
+			Node newNode = new Node();
+			newNode.pos = vert;
+			fullGraph.nodes.Add(newNode);
+			res.nodes.Add(newNode);
+			part.nodes.Add(newNode);
+		}
+
+		foreach (var connection in mst)
+		{
+			Vector2 pos1 = connection.p1;
+			Vector2 pos2 = connection.p2;
+
+			Node from = new Node();
+			Node to = new Node();
+
+			foreach (var node in fullGraph.nodes)
+			{
+				if (node.pos.Equals(pos1))
+				{
+					from = node;
+				}
+
+				if (node.pos.Equals(pos2))
+				{
+					to = node;
+				}
+			}
+
+			if (!from.pos.Equals(Vector2.zero) && !to.pos.Equals(Vector2.zero))
+			{
+				fullGraph.ConnectNodes(from, to);
+			}
+		}
+
+		foreach (var from in fullGraph.nodes)
+		{
+			foreach (var to in from.adjacentNodes)
+			{
+				part.ConnectNodes(from, to);
+				if (CheckForLoop(part))
+				{
+					//res.ConnectNodes(from, to);
+					part = res; //commit
+				}
+				else
+				{
+					//res.ConnectNodes(from, to);
+					res = part; //reset
 				}
 			}
 		}
 
-		return mst;
+		List<Connection> mstRes = new List<Connection>();
+
+		foreach (var from in res.nodes)
+		{
+			foreach (var to in from.adjacentNodes)
+			{
+				Connection con = new Connection(from.pos, to.pos);
+				mstRes.Add(con);
+			}
+		}
+
+		return mstRes;
+	}
+
+	//https://en.wikipedia.org/wiki/Cycle_(graph_theory)
+	private static bool CheckForLoop(UndirectedGraph graph)
+	{
+		HashSet<Node> newNodes = new HashSet<Node>(graph.nodes); // Set of new vertices to iterate
+		HashSet<List<Node>> paths = new HashSet<List<Node>>(); // Set of current paths
+		for (int i = 0; i < graph.nodes.Count; i++) // for-loop, iterating all vertices of the graph
+		{
+			Node node = graph.nodes.ElementAt(i);
+			newNodes.Add(node); // Add the vertex to the set of new vertices to iterate
+			List<Node> path = new List<Node>();
+			path.Add(node);
+			paths.Add(path); // Adds a path for each node as a starting vertex
+		}
+		HashSet<List<Node>> shortestCycles = new HashSet<List<Node>>(); // Set of shortest cycles
+		int lengthOfCycles = 0; // Length of shortest cycles
+		bool cyclesAreFound = false; // Whether or not cycles were found at all
+		while (!cyclesAreFound && newNodes.Count > 0) // As long as we still had vertices to iterate
+		{
+			newNodes.Clear(); // Empties the set of nodes to iterate
+			HashSet<List<Node>> newPaths = new HashSet<List<Node>>(); // Set of newly found paths
+			foreach (List<Node> path in paths) // foreach-loop, iterating all current paths
+			{
+				Node lastNode = path[path.Count - 1];
+				newNodes.Add(lastNode); // Adds the final vertex of the path to the list of vertices to iterate
+				foreach (Node nextNode in lastNode.adjacentNodes) // foreach-loop, iterating all neighbours of the previous node
+				{
+					if (path.Count >= 3 && path[0] == nextNode) // If a cycle with length greater or equal 3 was found
+					{
+						cyclesAreFound = true;
+						shortestCycles.Add(path); // Adds the path to the set of cycles
+						lengthOfCycles = path.Count;
+					}
+					if (!path.Contains(nextNode)) // If the path doesn't contain the neighbour
+					{
+						newNodes.Add(nextNode); // Adds the neighbour to the set of vertices to iterate
+												// Creates a new path
+						List<Node> newPath = new List<Node>();
+						newPath.AddRange(path); // Adds the current path's vertex to the new path in the correct order
+						newPath.Add(nextNode); // Adds the neighbour to the new path
+						newPaths.Add(newPath); // Adds the path to the set of newly found paths
+					}
+				}
+			}
+			paths = newPaths; // Updates the set of current paths
+		}
+
+		return cyclesAreFound;
 	}
 }

@@ -140,11 +140,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4741747626315308872, guid: 7c1e2e496439fd944b64eccfec6f621f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 7.9
       objectReference: {fileID: 0}
     - target: {fileID: 4741747626315308872, guid: 7c1e2e496439fd944b64eccfec6f621f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 9.9
       objectReference: {fileID: 0}
     - target: {fileID: 4741747626315308872, guid: 7c1e2e496439fd944b64eccfec6f621f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -214,6 +214,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _roomTemplate: {fileID: 6799106178145891546, guid: a1643ad22bf0f5d4ca82a7c57e236389, type: 3}
+  _corridorTemplate: {fileID: 880534093595276330, guid: f510c9cdd6910944290ec00cd7892648, type: 3}
   _nrOfRooms: 40
   _minDimensions: 10
   _maxDimensions: 57

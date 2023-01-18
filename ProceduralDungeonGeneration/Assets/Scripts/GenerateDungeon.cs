@@ -13,6 +13,7 @@ using Vector3 = UnityEngine.Vector3;
 public class GenerateDungeon : MonoBehaviour
 {
 	[SerializeField] private GameObject _roomTemplate;
+	[SerializeField] private GameObject _corridorTemplate;
 	[SerializeField] [MinAttribute(0)] private int _nrOfRooms = 2;
 	[SerializeField] [MinAttribute(0)] private int _minDimensions = 3;
 	[SerializeField] [MinAttribute (0)] private int _maxDimensions = 8;
@@ -21,12 +22,15 @@ public class GenerateDungeon : MonoBehaviour
 
 	private GameObject[] _rooms;
 	private List<GameObject> _mainRooms = new List<GameObject>();
+	private List<GameObject> _otherRooms = new List<GameObject>();
 	private float _meanWidth = 0.0f;
 	private float _meanHeight = 0.0f;
 	private List<Vector2> _mainRoomCenters = new List<Vector2>();
 	private List<Vector2> _hullVerts = new List<Vector2>();
 	private List<Triangle> _triangles = new List<Triangle>();
 	private List<Connection> _connections = new List<Connection>();
+	private List<Connection> _connections2 = new List<Connection>();
+	private List<Vector2> _dungeon = new List<Vector2>();
 
 	// Start is called before the first frame update
 	void Start()
@@ -65,6 +69,10 @@ public class GenerateDungeon : MonoBehaviour
 			{
 				_mainRooms.Add(room);
 				roomGnr.SetMainRoom();
+			}
+			else
+			{
+				_otherRooms.Add(room);
 			}
 		}
 
@@ -107,28 +115,52 @@ public class GenerateDungeon : MonoBehaviour
 
 		_triangles = DelaunayTriangulation.TriangulateByFlippingEdges(_mainRoomCenters);
 
-		//_connections = DelaunayTriangulation.GenerateMST(_triangles, hullVerts);
+		_connections = DelaunayTriangulation.GenerateMST(_triangles, _mainRoomCenters);
+
+		foreach (var connection in _connections)
+		{
+			int roomIter1 = _mainRoomCenters.FindIndex(v => v.Equals(connection.p1));
+			int roomIter2 = _mainRoomCenters.FindIndex(v => v.Equals(connection.p2));
+
+			GameObject room1 = _mainRooms[roomIter1];
+			GameObject room2 = _mainRooms[roomIter2];
+
+			GameObject corridor = Instantiate(_corridorTemplate);
+			GenerateCorridor generateCorridor = corridor.GetComponent<GenerateCorridor>();
+			generateCorridor.Room1 = room1;
+			generateCorridor.Room2 = room2;
+			generateCorridor.Initialize();
+			
+		}
+
+		for (int iter = 0; iter < _rooms.Length; ++iter)
+		{
+			if (!_mainRooms.Contains(_rooms[iter]))
+			{
+				Destroy(_rooms[iter]);
+			}
+		}
 
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-		foreach (var triangle in _triangles)
-		{
-			Vector3 p1 = triangle.v1.position;
-			Vector3 p2 = triangle.v2.position;
-			Vector3 p3 = triangle.v3.position;
-
-			Debug.DrawLine(p1, p2, Color.red);
-			Debug.DrawLine(p1, p3, Color.red);
-			Debug.DrawLine(p2, p3, Color.red);
-		}
-
-		//foreach (var curr in _connections)
+		//foreach (var triangle in _triangles)
 		//{
-		//	Debug.DrawLine(curr.p1.position, curr.p2.position, Color.red);
+		//	Vector3 p1 = triangle.v1.position;
+		//	Vector3 p2 = triangle.v2.position;
+		//	Vector3 p3 = triangle.v3.position;
+
+		//	Debug.DrawLine(p1, p2, Color.red);
+		//	Debug.DrawLine(p1, p3, Color.red);
+		//	Debug.DrawLine(p2, p3, Color.red);
 		//}
+
+		foreach (var curr in _connections)
+		{
+			Debug.DrawLine(curr.p1, curr.p2, Color.red);
+		}
 	}
 
 	int NormalizedRandom(int minVal, int maxVal)
@@ -154,4 +186,78 @@ public class GenerateDungeon : MonoBehaviour
 		float fac = (float)Math.Sqrt(-2.0 * Math.Log(S) / S);
 		return mean + stdDev * u * fac;
 	}
+
+	enum RelativeLocation
+	{
+		BottomLeft,
+		BottomRight,
+		TopLeft,
+		TopRight
+	}
+
+	private void ConnectRooms(GameObject room1, GameObject room2)
+	{
+		GenerateRoom room1Gnr = room1.GetComponent<GenerateRoom>();
+		GenerateRoom room2Gnr = room2.GetComponent<GenerateRoom>();
+		Vector2 room1Center = (Vector2) room1.transform.position + room1Gnr.Offset;
+		Vector2 room2Center = (Vector2) room2.transform.position + room2Gnr.Offset;
+
+		Vector2 corner = new Vector2(room2Center.x, room1Center.y);
+
+		Connection con1 = new Connection(room1Center, corner);
+		Connection con2 = new Connection(room2Center, corner);
+
+		_connections2.Add(con1);
+		_connections2.Add(con2);
+
+		//switch (CheckRelativeLocation(room1Center, room2Center))
+		//{
+		//	case RelativeLocation.BottomLeft:
+		//	{
+		//		corner = new Vector2(room2Center.x, room1Center.y);
+		//		break;
+		//	};
+		//	case RelativeLocation.BottomRight:
+		//	{
+		//		corner = new Vector2(room2Center.x, room1Center.y);
+		//		break;
+		//	};
+		//	case RelativeLocation.TopLeft:
+		//	{
+		//		corner = new Vector2(room2Center.x, room1Center.y);
+		//		break;
+		//	};
+		//	case RelativeLocation.TopRight:
+		//	{
+		//		corner = new Vector2(room2Center.x, room1Center.y);
+		//		break;
+		//	};
+		//}
+
+	}
+
+	private RelativeLocation CheckRelativeLocation(Vector2 room1, Vector2 room2)
+	{
+		RelativeLocation res = RelativeLocation.BottomLeft;
+		if (room2.x < room1.x)
+		{
+			if (room2.y < room1.y)
+			{
+				res =  RelativeLocation.BottomLeft;
+			}
+			else res = RelativeLocation.TopLeft;
+		}
+
+		if (room2.x > room1.x)
+		{
+			if (room2.y < room1.y)
+			{
+				res = RelativeLocation.BottomRight;
+			}
+			else res = RelativeLocation.TopRight;
+		}
+
+		return res;
+	}
+
 }
