@@ -31,7 +31,7 @@ When all the rooms are placed, I run a physics simulation on them so they spread
 
 ### Part 2: Select Main Rooms
 
-Next up, I have to select my the rooms that I will end up connecting, my main rooms. I compare the width and height of the room agains the mean width/height, compared with the selection threshhold variable. This variable skews the selection: the higher the less likely main rooms will be chosen, the lower the more likely.
+Next up, I have to select the rooms that I will end up connecting, my main rooms. I compare the width and height of the room agains the mean width/height, compared with the selection threshhold variable. This variable skews the selection: the higher the less likely main rooms will be chosen, the lower the more likely.
 
 Rooms that aren't chosen for a main room are saved in a different list, so they can be deleted later.
 
