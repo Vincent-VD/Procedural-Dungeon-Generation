@@ -6,7 +6,7 @@ Procedural 2D Dungeon Generation in Unity.
 
 Procedural dungeon generation in 2D.
 
-![End result](/Assets/Result.png)
+![End result](https://user-images.githubusercontent.com/25634121/213528108-e8005425-602c-43f2-b87f-3b3080f481e9.png)
 
 Procedural dungeons are a staple of sungeons crawlers. Roaming around in a dungeons whose layout changes every time, making your way to the end.
 Below I will write down my thought process on how I went about and created my own implementation of one of the algorithms.
@@ -30,7 +30,8 @@ The width and height of the rooms are pseudo-random dunmbers from a normal distr
 
 When all the rooms are placed, I run a physics simulation on them so they spread out (hence the box collision and rigidbody).
 
-![Generated rooms](/Assets/Step_1.png)
+![Generated Rooms](https://user-images.githubusercontent.com/25634121/213528184-8fbf437f-0d5a-4b07-a0a9-1a534a947e1e.png)
+
 
 ### Step 2: Select Main Rooms
 
@@ -38,22 +39,23 @@ Next up, I have to select my the rooms that I will end up connecting, my main ro
 
 Rooms that aren't chosen for a main room are saved in a different list, so they can be deleted later.
 
-![Main rooms](/Assets/Step_2.png)
+![Main Rooms](https://user-images.githubusercontent.com/25634121/213528255-b4ec130b-2f1c-41f1-a3fc-b3f2b5c9f618.png)
 The main rooms are highlighted in black.
 
 ## The algorithm part
 
 This part was where I really struggled. I had to combine different algorithms, and find a way to tie their output together.
 - First, I pass a list with the center coordinates of the rooms to a function with calculates the convex hull. ([Jarvis-March gift-wrapping algorithm](https://en.wikipedia.org/wiki/Gift_wrapping_algorithm))
-![Convec hull](/Assets/ConvexHull.png)
+![Convex Hull](https://user-images.githubusercontent.com/25634121/213528309-36b5aa1f-18c4-4bce-a00e-c7da467627cd.png)
 
 - Then, I create triangles using the hull vertices
 
 - Thirdly, I had to transform the triangles using the [Delaunay Algorithm] (https://en.wikipedia.org/wiki/Delaunay_triangulation). This agorithm is used to avoid long, thin triangles which can otherwise occur by flipping the common edge between 2 triangles. I found an implementation of this algorithm on [Habrador](https://www.habrador.com/tutorials/math/11-delaunay/).
-![Delaunay triangulation result](Assets/Triangulation.png)
+![Triangulation](https://user-images.githubusercontent.com/25634121/213528335-3599d006-f5c8-41e4-b004-ee2db21e0957.png)
 
 - The last part is where I struggled the most. I had to generate an [MST (minimum spanning tree)](https://en.wikipedia.org/wiki/Minimum_spanning_tree) using the list of separate triangles I got from the Delaunay algorithm. I converted the triangles into a graph using the implementation found on [Wikipedia's page on graph cycles](https://en.wikipedia.org/wiki/Cycle_(graph_theory)).
-![Generated MST](/Assets/Corridor_MST.png)
+![Corridor + MST](https://user-images.githubusercontent.com/25634121/213528368-06d352c1-3691-4638-a358-67933c188f90.png)
+
 
 ## Corridor Generation
 
