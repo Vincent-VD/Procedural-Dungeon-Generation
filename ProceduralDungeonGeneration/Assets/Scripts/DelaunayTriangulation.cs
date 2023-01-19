@@ -241,7 +241,7 @@ public static class DelaunayTriangulation
 		Vector2 vPointOnHull = points.Where(p => p.x == (points.Min(y => y.x))).First();
 
 		Vector2 vEndpoint;
-		while (true)
+		do
 		{
 			hull.Add(vPointOnHull);
 			vEndpoint = points[0];
@@ -256,11 +256,8 @@ public static class DelaunayTriangulation
 			}
 
 			vPointOnHull = vEndpoint;
-			//Break condition -- if we've looped back around then we've made a convex hull!
-			if (vEndpoint == hull[0])
-				break;
 		}
-		//while (vEndpoint != hull[0]);
+		while (vEndpoint != hull[0]);
 		hull.Add(hull[0]);
 
 		return hull;
