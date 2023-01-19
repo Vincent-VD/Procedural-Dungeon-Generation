@@ -38,7 +38,7 @@ Rooms that aren't chosen for a main room are saved in a different list, so they 
 ![Main Rooms](https://user-images.githubusercontent.com/25634121/213528255-b4ec130b-2f1c-41f1-a3fc-b3f2b5c9f618.png)
 The main rooms are highlighted in black.
 
-## The algorithm part
+## The algorithm part: the algorithm part
 
 This part was where I really struggled. I had to combine different algorithms, and find a way to tie their output together.
 - First, I pass a list with the center coordinates of the rooms to a function with calculates the convex hull. ([Jarvis-March gift-wrapping algorithm](https://en.wikipedia.org/wiki/Gift_wrapping_algorithm))
