@@ -4,7 +4,7 @@
 
 ![End result](https://user-images.githubusercontent.com/25634121/213528108-e8005425-602c-43f2-b87f-3b3080f481e9.png)
 
-Procedural dungeons are a staple of sungeons crawlers. Roaming around in a dungeons whose layout changes every time, making your way to the end.
+Procedural dungeons are a staple of dungeon crawlers. Roaming around in a dungeons whose layout changes every time, making your way to the end.
 Below I will write down my thought process on how I went about and created my own implementation of one of the algorithms.
 
 I based my implementation on the Reddit post by the [TinyKeep dev](https://www.reddit.com/r/gamedev/comments/1dlwc4/procedural_dungeon_generation_algorithm_explained/)
@@ -22,7 +22,7 @@ The Generate Dungeon script generate a variable number of rooms, with minimum an
 ### Part 1: Generate Rooms
 
 The first step is to generate the rooms. This is done in a simple for loop where I instantiate the room prefab game objects, assign them their position, and also calculate the mean width and height of rooms, as I need this for later.
-The width and height of the rooms are pseudo-random dunmbers from a normal distribution using the [Marsaglia polar method](https://en.wikipedia.org/wiki/Marsaglia_polar_method). This way, the numbers don't diverge as heavily as they would with Unity's built-in random numbers.
+The width and height of the rooms are pseudo-random numbers from a normal distribution using the [Marsaglia polar method](https://en.wikipedia.org/wiki/Marsaglia_polar_method). This way, the numbers don't diverge as heavily as they would with Unity's built-in random numbers.
 
 When all the rooms are placed, I run a physics simulation on them so they spread out (hence the box collision and rigidbody).
 
@@ -31,7 +31,7 @@ When all the rooms are placed, I run a physics simulation on them so they spread
 
 ### Part 2: Select Main Rooms
 
-Next up, I have to select my the rooms that I will end up connecting, my main rooms. I compare the width and height of the room agains the mean width/height, compared with the selection threshhold variable. This variable skews te selection: the higher the less likely main rooms will be chosen, the lower the more likely.
+Next up, I have to select my the rooms that I will end up connecting, my main rooms. I compare the width and height of the room agains the mean width/height, compared with the selection threshhold variable. This variable skews the selection: the higher the less likely main rooms will be chosen, the lower the more likely.
 
 Rooms that aren't chosen for a main room are saved in a different list, so they can be deleted later.
 
@@ -62,4 +62,4 @@ This part was where I really struggled. I had to combine different algorithms, a
 Now that I have edges that connect my rooms, all that's left is to actually connect them. The way I did this is pretty simply and straightforward: I calculate my corner point and start creating tiles until I either reach said corner point, or collide with the other room.
 
 ## Future work
-This implementaion is far from perfect (please don't use this as-is in any project!), but I plan on improving on this as time goes on, improvming my graph so the rooms connect better, adding collision to the walls, rooms, corridors, so it can be turned into something playable. This was my first venture into the realm of procedural generation, a topic I am very interested in, so I want to do more in this field in the future.
+This implementation is far from perfect (please don't use this as-is in any project!), but I plan on improving on this as time goes on. Improving my graph so the rooms connect better, adding collision to the walls, rooms, corridors, so it can be turned into something playable. This was my first venture into the realm of procedural generation, a topic I am very interested in, so I want to do more in this field in the future.
