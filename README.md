@@ -36,6 +36,7 @@ Next up, I have to select my the rooms that I will end up connecting, my main ro
 Rooms that aren't chosen for a main room are saved in a different list, so they can be deleted later.
 
 ![Main Rooms](https://user-images.githubusercontent.com/25634121/213528255-b4ec130b-2f1c-41f1-a3fc-b3f2b5c9f618.png)
+
 The main rooms are highlighted in black.
 
 ## The algorithm part: the algorithm part
@@ -48,9 +49,11 @@ This part was where I really struggled. I had to combine different algorithms, a
 - Then, I create triangles using the hull vertices
 
 - Thirdly, I had to transform the triangles using the [Delaunay Algorithm](https://en.wikipedia.org/wiki/Delaunay_triangulation). This agorithm is used to avoid long, thin triangles which can otherwise occur by flipping the common edge between 2 triangles. I found an implementation of this algorithm on [Habrador](https://www.habrador.com/tutorials/math/11-delaunay/).
+
 ![Triangulation](https://user-images.githubusercontent.com/25634121/213528335-3599d006-f5c8-41e4-b004-ee2db21e0957.png)
 
 - The last part is where I struggled the most. I had to generate an [MST (minimum spanning tree)](https://en.wikipedia.org/wiki/Minimum_spanning_tree) using the list of separate triangles I got from the Delaunay algorithm. I converted the triangles into a graph using the implementation found on [Wikipedia's page on graph cycles](https://en.wikipedia.org/wiki/Cycle_(graph_theory)).
+
 ![Corridor + MST](https://user-images.githubusercontent.com/25634121/213528368-06d352c1-3691-4638-a358-67933c188f90.png)
 
 
