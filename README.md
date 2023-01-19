@@ -1,10 +1,6 @@
-# Procedural Dungeon Generation
-Procedural 2D Dungeon Generation in Unity.
-
+# Procedural 2D Dungeon Generation in Unity
 
 ## Topic
-
-Procedural dungeon generation in 2D.
 
 ![End result](https://user-images.githubusercontent.com/25634121/213528108-e8005425-602c-43f2-b87f-3b3080f481e9.png)
 
@@ -23,7 +19,7 @@ The script I wrote has 2 configurable parameters: cell size and cell spacing. Ce
 
 The Generate Dungeon script generate a variable number of rooms, with minimum and maximum dimensions.
 
-### Step 1: Generate Rooms
+### Part 1: Generate Rooms
 
 The first step is to generate the rooms. This is done in a simple for loop where I instantiate the room prefab game objects, assign them their position, and also calculate the mean width and height of rooms, as I need this for later.
 The width and height of the rooms are pseudo-random dunmbers from a normal distribution using the [Marsaglia polar method](https://en.wikipedia.org/wiki/Marsaglia_polar_method). This way, the numbers don't diverge as heavily as they would with Unity's built-in random numbers.
@@ -33,7 +29,7 @@ When all the rooms are placed, I run a physics simulation on them so they spread
 ![Generated Rooms](https://user-images.githubusercontent.com/25634121/213528184-8fbf437f-0d5a-4b07-a0a9-1a534a947e1e.png)
 
 
-### Step 2: Select Main Rooms
+### Part 2: Select Main Rooms
 
 Next up, I have to select my the rooms that I will end up connecting, my main rooms. I compare the width and height of the room agains the mean width/height, compared with the selection threshhold variable. This variable skews te selection: the higher the less likely main rooms will be chosen, the lower the more likely.
 
