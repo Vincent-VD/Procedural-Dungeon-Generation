@@ -35,52 +35,10 @@ public class GenerateDungeon : MonoBehaviour
 	// Start is called before the first frame update
 	void Start()
 	{
-		_rooms = new GameObject[_nrOfRooms];
-		for (int iter = 0; iter < _nrOfRooms; ++iter)
-		{
-			Vector3 pos = Random.insideUnitCircle;
-			pos.y *= _ellipseHeight;
-			GameObject room = Instantiate(_roomTemplate);
-			int width = NormalizedRandom(_minDimensions, _maxDimensions);
-			int height = NormalizedRandom(_minDimensions, _maxDimensions);
-			room.GetComponent<GenerateRoom>().InitializeRoom(width, height);
-			//Debug.Log(width.ToString() + "  " + height.ToString());
-			room.transform.position = pos;
-			room.transform.SetParent(this.transform);
-			_rooms[iter] = room;
-			_meanWidth += (float) width;
-			_meanHeight += (float) height;
-		}
+		//Instantiate rooms at random positions
+		GenerateRooms();
 
-		foreach (var room in _rooms)
-		{
-			room.GetComponent<GenerateRoom>().Simulate();
-		}
-
-		_meanWidth /= _nrOfRooms;
-		_meanHeight /= _nrOfRooms;
-
-		//Select main rooms
-		foreach (var room in _rooms)
-		{
-			GenerateRoom roomGnr = room.GetComponent<GenerateRoom>();
-			if (roomGnr.Width >= _mainRoomSelectionThreshold * _meanWidth &&
-				roomGnr.Height >= _mainRoomSelectionThreshold * _meanHeight)
-			{
-				_mainRooms.Add(room);
-				roomGnr.SetMainRoom();
-			}
-			else
-			{
-				_otherRooms.Add(room);
-			}
-		}
-
-		foreach (var room in _mainRooms)
-		{
-			GenerateRoom roomGnr = room.GetComponent<GenerateRoom>();
-			_mainRoomCenters.Add((Vector2)room.transform.position + roomGnr.Offset);
-		}
+		SelectMainRooms();
 
 		//_hullVerts = DelaunayTriangulation.GetConvexHull(_mainRoomCenters);
 		//_triangles = DelaunayTriangulation.TriangulateConvexPolygon(_hullVerts);
@@ -117,22 +75,9 @@ public class GenerateDungeon : MonoBehaviour
 
 		_connections = DelaunayTriangulation.GenerateMST(_triangles, _mainRoomCenters);
 
-		foreach (var connection in _connections)
-		{
-			int roomIter1 = _mainRoomCenters.FindIndex(v => v.Equals(connection.p1));
-			int roomIter2 = _mainRoomCenters.FindIndex(v => v.Equals(connection.p2));
+		AddInnerRooms();
 
-			GameObject room1 = _mainRooms[roomIter1];
-			GameObject room2 = _mainRooms[roomIter2];
-
-			GameObject corridor = Instantiate(_corridorTemplate);
-			GenerateCorridor generateCorridor = corridor.GetComponent<GenerateCorridor>();
-			generateCorridor.Room1 = room1;
-			generateCorridor.Room2 = room2;
-			generateCorridor.Initialize();
-			
-		}
-
+		//Destroy unused rooms
 		for (int iter = 0; iter < _rooms.Length; ++iter)
 		{
 			if (!_mainRooms.Contains(_rooms[iter]))
@@ -163,11 +108,84 @@ public class GenerateDungeon : MonoBehaviour
 		}
 	}
 
+	void GenerateRooms()
+	{
+		_rooms = new GameObject[_nrOfRooms];
+		for (int iter = 0; iter < _nrOfRooms; ++iter)
+		{
+			Vector3 pos = Random.insideUnitCircle;
+			pos.y *= _ellipseHeight;
+			GameObject room = Instantiate(_roomTemplate);
+			int width = NormalizedRandom(_minDimensions, _maxDimensions);
+			int height = NormalizedRandom(_minDimensions, _maxDimensions);
+			room.GetComponent<GenerateRoom>().InitializeRoom(width, height);
+			//Debug.Log(width.ToString() + "  " + height.ToString());
+			room.transform.position = pos;
+			room.transform.SetParent(this.transform);
+			_rooms[iter] = room;
+			_meanWidth += (float)width;
+			_meanHeight += (float)height;
+		}
+
+		//Solve collision to spread them all out
+		foreach (var room in _rooms)
+		{
+			room.GetComponent<GenerateRoom>().Simulate();
+		}
+
+		_meanWidth /= _nrOfRooms;
+		_meanHeight /= _nrOfRooms;
+	}
+
+	void SelectMainRooms()
+	{
+		//Select main rooms
+		foreach (var room in _rooms)
+		{
+			GenerateRoom roomGnr = room.GetComponent<GenerateRoom>();
+			if (roomGnr.Width >= _mainRoomSelectionThreshold * _meanWidth &&
+			    roomGnr.Height >= _mainRoomSelectionThreshold * _meanHeight)
+			{
+				_mainRooms.Add(room);
+				roomGnr.SetMainRoom();
+			}
+			else
+			{
+				_otherRooms.Add(room);
+			}
+		}
+
+		foreach (var room in _mainRooms)
+		{
+			GenerateRoom roomGnr = room.GetComponent<GenerateRoom>();
+			_mainRoomCenters.Add((Vector2)room.transform.position + roomGnr.Offset);
+		}
+	}
+
 	int NormalizedRandom(int minVal, int maxVal)
 	{
 		float mean = (minVal + maxVal) / 2.0f;
 		float stdDev = (maxVal - mean) / 3.0f;
 		return (int)NextGaussianDouble(mean, stdDev);
+	}
+
+	void AddInnerRooms()
+	{
+		foreach (var connection in _connections)
+		{
+			int roomIter1 = _mainRoomCenters.FindIndex(v => v.Equals(connection.p1));
+			int roomIter2 = _mainRoomCenters.FindIndex(v => v.Equals(connection.p2));
+
+			GameObject room1 = _mainRooms[roomIter1];
+			GameObject room2 = _mainRooms[roomIter2];
+
+			GameObject corridor = Instantiate(_corridorTemplate);
+			GenerateCorridor generateCorridor = corridor.GetComponent<GenerateCorridor>();
+			generateCorridor.Room1 = room1;
+			generateCorridor.Room2 = room2;
+			generateCorridor.Initialize();
+
+		}
 	}
 
 	//Marsaglia polar method
