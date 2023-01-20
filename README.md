@@ -66,10 +66,10 @@ This implementation is far from perfect (please don't use this as-is in any proj
 
 ## Bibliography
 
-TinyKeep Dev: https://www.reddit.com/r/gamedev/comments/1dlwc4/procedural_dungeon_generation_algorithm_explained/
-Explanation with gifs & iamges: https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
-Marsaglia Polar Method: https://en.wikipedia.org/wiki/Marsaglia_polar_method
-Jarvis-March gift-wrapping algorithm: https://en.wikipedia.org/wiki/Gift_wrapping_algorithm
-Delaunay Triangulation: https://en.wikipedia.org/wiki/Delaunay_triangulation
-Minimum Spanning Tree: https://en.wikipedia.org/wiki/Minimum_spanning_tree
-Cycles in graphs: https://en.wikipedia.org/wiki/Cycle_(graph_theory)
+- TinyKeep Dev: https://www.reddit.com/r/gamedev/comments/1dlwc4/procedural_dungeon_generation_algorithm_explained/
+- Explanation with gifs & iamges: https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
+- Marsaglia Polar Method: https://en.wikipedia.org/wiki/Marsaglia_polar_method
+- Jarvis-March gift-wrapping algorithm: https://en.wikipedia.org/wiki/Gift_wrapping_algorithm
+- Delaunay Triangulation: https://en.wikipedia.org/wiki/Delaunay_triangulation
+- Minimum Spanning Tree: https://en.wikipedia.org/wiki/Minimum_spanning_tree
+- Cycles in graphs: https://en.wikipedia.org/wiki/Cycle_(graph_theory)
