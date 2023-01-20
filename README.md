@@ -63,3 +63,13 @@ Now that I have edges that connect my rooms, all that's left is to actually conn
 
 ## Future work
 This implementation is far from perfect (please don't use this as-is in any project!), but I plan on improving on this as time goes on. Improving my graph so the rooms connect better, adding collision to the walls, rooms, corridors, so it can be turned into something playable. This was my first venture into the realm of procedural generation, a topic I am very interested in, so I want to do more in this field in the future.
+
+## Bibliography
+
+TinyKeep Dev: https://www.reddit.com/r/gamedev/comments/1dlwc4/procedural_dungeon_generation_algorithm_explained/
+Explanation with gifs & iamges: https://www.gamedeveloper.com/programming/procedural-dungeon-generation-algorithm
+Marsaglia Polar Method: https://en.wikipedia.org/wiki/Marsaglia_polar_method
+Jarvis-March gift-wrapping algorithm: https://en.wikipedia.org/wiki/Gift_wrapping_algorithm
+Delaunay Triangulation: https://en.wikipedia.org/wiki/Delaunay_triangulation
+Minimum Spanning Tree: https://en.wikipedia.org/wiki/Minimum_spanning_tree
+Cycles in graphs: https://en.wikipedia.org/wiki/Cycle_(graph_theory)
